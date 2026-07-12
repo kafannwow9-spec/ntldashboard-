@@ -1,0 +1,8 @@
+{
+  "name": "Remix: NTL Music Bot Manager",
+  "description": "نظام متطور لإدارة وتشغيل الأغاني في ديسكورد مع محاكي تفاعلي وفصل للملفات والتحكم بالتكرار.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

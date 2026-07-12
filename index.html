@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم بوت NTL | Discord Bot Dashboard</title>
+  
+  <!-- Preconnect & Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            cairo: ['Cairo', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'Cairo', 'sans-serif'],
+          },
+          colors: {
+            discord: '#5865F2',
+            brand: {
+              50: '#f0f4ff',
+              100: '#e1e8ff',
+              200: '#cbd7ff',
+              300: '#a7bcff',
+              400: '#7c97ff',
+              500: '#4f6cff',
+              600: '#384eff',
+              700: '#2c3be3',
+              800: '#2530b8',
+              900: '#242d92',
+              950: '#070a24',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    body {
+      background-color: #05070f;
+      color: #f3f4f6;
+      font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
+    }
+    
+    /* Elegant modern glassmorphism */
+    .glass {
+      background: rgba(10, 15, 30, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    
+    .glass-card {
+      background: rgba(13, 19, 39, 0.6);
+      border: 1px solid rgba(59, 130, 246, 0.08);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .glass-card:hover {
+      background: rgba(17, 26, 54, 0.85);
+      border-color: rgba(59, 130, 246, 0.25);
+      box-shadow: 0 12px 40px -12px rgba(59, 130, 246, 0.25);
+      transform: translateY(-4px);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #05070f;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+    
+    /* Gradients */
+    .bg-grid-pattern {
+      background-image: radial-gradient(rgba(59, 130, 246, 0.08) 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+    }
+    
+    /* Animation for active glowing dot */
+    @keyframes pulse-glow {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 12px #22c55e; }
+    }
+    .pulse-dot {
+      animation: pulse-glow 2s infinite ease-in-out;
+    }
+
+    .active-tab {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25) 0%, rgba(99, 102, 241, 0.25) 100%);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      color: #ffffff;
+      box-shadow: 0 4px 15px -3px rgba(59, 130, 246, 0.3);
+    }
+    
+    .inactive-tab {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      color: #9ca3af;
+    }
+    .inactive-tab:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body class="bg-grid-pattern min-h-screen flex flex-col selection:bg-brand-500 selection:text-white relative overflow-x-hidden">
+
+  <!-- Ambient background glow elements -->
+  <div class="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-blue-900/10 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="absolute bottom-[-10%] right-[-5%] w-[45vw] h-[45vw] bg-indigo-900/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+  <!-- HEADER -->
+  <header class="glass sticky top-0 z-40 border-b border-white/5 shadow-lg shadow-black/20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Brand Logo / Name -->
+      <div class="flex items-center gap-3.5 cursor-pointer" onclick="goHome()">
+        <div class="relative group">
+          <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 opacity-75 blur group-hover:opacity-100 transition duration-300"></div>
+          <img src="/assets/bot_avatar.jpg" alt="NTL Logo" class="relative w-11 h-11 rounded-full border border-white/15 object-cover shadow-md">
+        </div>
+        <div class="flex flex-col">
+          <span class="text-white font-black text-xl tracking-tight">بوت NTL</span>
+          <span class="text-blue-400 font-bold text-xs tracking-wider uppercase">لوحة التحكم السريعة</span>
+        </div>
+      </div>
+      
+      <!-- Auth & Settings Section -->
+      <div class="flex items-center gap-3">
+        <div id="auth-section">
+          <!-- Guest State -->
+          <button id="btn-login" onclick="loginWithDiscord()" class="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-semibold text-white rounded-lg group bg-gradient-to-br from-blue-600 to-indigo-600 group-hover:from-blue-600 group-hover:to-indigo-600 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-800 transition duration-300 transform hover:scale-[1.03] active:scale-[0.98] shadow-lg shadow-blue-500/20 cursor-pointer">
+            <span class="relative px-5 py-2.5 transition-all ease-in duration-700 bg-gray-900 rounded-md group-hover:bg-opacity-0 flex items-center gap-2">
+              <i data-lucide="log-in" class="w-4 h-4 text-blue-400 group-hover:text-white"></i>
+              <span>تسجيل الدخول عبر ديسكورد</span>
+            </span>
+          </button>
+
+          <!-- User Profile State (Hidden initially) -->
+          <div id="user-profile" class="hidden flex items-center gap-3">
+            <div class="flex items-center gap-3 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/5 transition duration-200">
+              <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full border border-white/10">
+              <span id="user-name" class="text-sm font-semibold text-gray-200">المستخدم</span>
+            </div>
+            <button onclick="logout()" class="p-2.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/10 hover:border-red-500/20 transition duration-200 cursor-pointer" title="تسجيل الخروج">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 flex flex-col gap-8">
+    
+    <!-- SYSTEM SETUP ALERTS -->
+    <div id="setup-alert" class="hidden glass border-yellow-500/20 bg-yellow-500/5 rounded-2xl p-6 flex flex-col md:flex-row items-start gap-4 shadow-xl shadow-black/10">
+      <div class="p-3 bg-yellow-500/10 text-yellow-400 rounded-xl">
+        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+      </div>
+      <div class="flex-grow">
+        <h3 class="text-yellow-400 font-bold text-lg mb-1">تنبيه: ملف الإعدادات غير مكتمل!</h3>
+        <p class="text-gray-300 text-sm leading-relaxed mb-4">
+          لم يتم تكوين متغيرات الاتصال للديسكورد بشكل كامل بعد. يرجى ملء الحقول الفارغة في ملف <code class="bg-black/30 px-1.5 py-0.5 rounded text-yellow-300 font-mono text-xs">config.json</code> أو عبر قائمة Secrets في AI Studio لضمان عمل لوحة التحكم والمصادقة بالشكل الصحيح.
+        </p>
+        
+        <!-- Expandable instructions -->
+        <details class="group">
+          <summary class="text-xs font-bold text-yellow-400 cursor-pointer hover:underline list-none flex items-center gap-1.5 select-none">
+            <span>عرض إرشادات التهيئة وربط الـ OAuth2</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition group-open:rotate-180"></i>
+          </summary>
+          <div class="mt-4 pt-4 border-t border-yellow-500/10 text-xs text-gray-300 space-y-3.5">
+            <div class="flex flex-col gap-1">
+              <span class="font-bold text-yellow-300">1. رابط التحويل المطلوب (Redirect URI) للديسكورد:</span>
+              <div class="flex items-center gap-2 mt-1">
+                <input id="redirect-uri-box" readonly type="text" class="bg-black/40 border border-white/10 rounded px-3 py-1.5 font-mono text-gray-300 w-full max-w-xl text-left select-all" value="">
+                <button onclick="copyRedirectUri()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded flex items-center gap-1 transition">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                  <span>نسخ</span>
+                </button>
+              </div>
+            </div>
+            <p>
+              قم بإضافة هذا الرابط في لوحة تحكم تطبيق ديسكورد الخاص بك (Developer Portal) تحت قسم <strong class="text-white">OAuth2 -> Redirects</strong>.
+            </p>
+            <p>
+              <strong class="text-white">2. المتغيرات المطلوبة في ملف config.json:</strong>
+            </p>
+            <pre class="bg-black/50 p-3.5 rounded border border-white/5 text-left text-glow font-mono text-[11px] overflow-x-auto leading-relaxed text-blue-300">
+{
+  "CLIENT_ID": "معرف_تطبيق_ديسكورد_هنا",
+  "CLIENT_SECRET": "الرمز_السري_للتطبيق_هنا",
+  "REDIRECT_URI": "رابط_التوجيه_المعروض_أعلاه",
+  "BOT_TOKEN": "توكن_البوت_هنا"
+}</pre>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- MAIN VIEWPORTS -->
+    <div id="viewports-container">
+      
+      <!-- GUEST / LANDING VIEWPORT -->
+      <section id="viewport-guest" class="flex flex-col items-center justify-center text-center py-16 px-4 gap-8 min-h-[55vh]">
+        <div class="relative max-w-2xl flex flex-col items-center gap-6">
+          <div class="relative group">
+            <div class="absolute -inset-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 opacity-75 blur-md group-hover:opacity-100 transition duration-300"></div>
+            <img src="/assets/bot_avatar.jpg" alt="NTL Bot" class="relative w-28 h-28 rounded-2xl border border-white/15 object-cover shadow-2xl">
+          </div>
+          <h1 class="text-4xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+            إدارة بوت ديسكورد <span class="bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-400 bg-clip-text text-transparent">NTL</span> بكل سهولة
+          </h1>
+          <p class="text-gray-400 text-lg leading-relaxed max-w-xl">
+            سجل دخولك لوحة تحكم الأوامر المخصصة لإدارة وتفعيل أو تعطيل ميزات سيرفراتك وإعداداتها مباشرة وفورياً من متصفحك.
+          </p>
+        </div>
+        
+        <button onclick="loginWithDiscord()" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-lg rounded-xl shadow-xl shadow-blue-500/20 flex items-center gap-3 transition-all duration-300 hover:scale-[1.04] active:scale-[0.97] cursor-pointer">
+          <i data-lucide="log-in" class="w-5 h-5"></i>
+          <span>ابدأ الآن وسجل الدخول</span>
+        </button>
+
+        <!-- Feature Grid Showcase -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl w-full mt-12 text-right">
+          <div class="glass p-6 rounded-2xl border border-white/5">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-white font-bold text-base mb-2">إدارة الصلاحيات والتحكم</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              تصفية ذكية تعرض لك السيرفرات التي تمتلك فيها رتبة "مدير" وصلاحيات التحكم الكاملة فقط لحماية أمان سيرفرك.
+            </p>
+          </div>
+          <div class="glass p-6 rounded-2xl border border-white/5">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4">
+              <i data-lucide="toggle-left" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-white font-bold text-base mb-2">تفعيل وتعطيل فوري</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              تحكم كامل في ميزات البوت والأوامر كالتذاكر، الترحيب، نظام الموسيقى والمستويات بمفتاح تبديل واحد.
+            </p>
+          </div>
+          <div class="glass p-6 rounded-2xl border border-white/5">
+            <div class="w-10 h-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+              <i data-lucide="zap" class="w-5 h-5"></i>
+            </div>
+            <h4 class="text-white font-bold text-base mb-2">مزامنة سريعة وآمنة</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">
+              يتم حفظ التغييرات محلياً في خادم البوت بأمان تام، لتطبق وتعمل في الديسكورد فوراً دون أي حاجة لإعادة تشغيل البوت.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- GUILDS / SERVERS LIST VIEWPORT -->
+      <section id="viewport-guilds" class="hidden flex flex-col gap-6 animate-fade-in">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-5">
+          <div class="flex flex-col gap-1">
+            <h2 class="text-2xl font-black text-white">اختر سيرفر لإدارته</h2>
+            <p class="text-gray-400 text-sm">يتم عرض السيرفرات التي تمتلك فيها رتبة "مدير" (Administrator) وتدعم لوحة التحكم.</p>
+          </div>
+          <button onclick="refreshGuildsList()" class="bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white px-4 py-2 rounded-lg border border-white/5 hover:border-white/10 flex items-center gap-2 text-sm font-semibold transition duration-200">
+            <i id="icon-refresh" data-lucide="refresh-cw" class="w-4 h-4"></i>
+            <span>تحديث القائمة</span>
+          </button>
+        </div>
+
+        <div id="guilds-loader" class="flex flex-col items-center justify-center py-20">
+          <div class="border-4 border-blue-500 border-t-transparent rounded-full w-10 h-10 animate-spin mb-4"></div>
+          <p class="text-gray-400 text-sm">جاري جلب قائمة السيرفرات ومزامنتها...</p>
+        </div>
+
+        <!-- No Guilds Found State -->
+        <div id="guilds-empty-state" class="hidden text-center py-16 glass rounded-2xl border border-white/5 flex flex-col items-center gap-4">
+          <div class="w-14 h-14 bg-gray-500/10 text-gray-400 rounded-full flex items-center justify-center">
+            <i data-lucide="folder-open" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-white font-bold text-lg">لم يتم العثور على سيرفرات مطابقة!</h4>
+          <p class="text-gray-400 text-sm max-w-sm">
+            يجب أن تمتلك صلاحية "مدير" (Administrator) في سيرفر واحد على الأقل للتحكم به من هنا. يرجى مراجعة صلاحياتك في سيرفر ديسكورد.
+          </p>
+        </div>
+
+        <!-- Guild Grid -->
+        <div id="guilds-grid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Dynamically Generated Cards Go Here -->
+        </div>
+      </section>
+
+      <!-- COMMANDS CONTROL DASHBOARD VIEWPORT -->
+      <section id="viewport-commands" class="hidden flex flex-col gap-6">
+        
+        <!-- Breadcrumb / Back Navigation -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-5">
+          <div class="flex items-center gap-4">
+            <button onclick="backToGuilds()" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/5 text-gray-300 hover:text-white transition duration-200 cursor-pointer" title="العودة للسيرفرات">
+              <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </button>
+            <div class="flex items-center gap-3">
+              <div id="selected-guild-avatar-container">
+                <!-- Guild Avatar dynamically rendered here -->
+              </div>
+              <div class="flex flex-col">
+                <h2 id="selected-guild-name" class="text-2xl font-black text-white">اسم السيرفر</h2>
+                <span class="text-blue-400 text-xs font-bold">لوحة إعدادات التحكم بالأوامر</span>
+              </div>
+            </div>
+          </div>
+          
+          <button onclick="saveAllGuildSettings()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-blue-500/10 flex items-center gap-2 transition transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>حفظ الإعدادات الفورية</span>
+          </button>
+        </div>
+
+        <!-- Tab List (Beautiful horizontal scrolling tabs with gorgeous badges and glowing hover effects) -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-3 border-b border-white/5 scrollbar-none">
+          <button onclick="switchTab('tickets')" id="tab-tickets" class="active-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="folder-open" class="w-4 h-4"></i>
+            <span>لوحات التذاكر</span>
+          </button>
+          <button onclick="switchTab('suggestions')" id="tab-suggestions" class="inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>نظام الاقتراحات</span>
+          </button>
+          <button onclick="switchTab('azkar')" id="tab-azkar" class="inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="scroll" class="w-4 h-4"></i>
+            <span>نظام الأذكار</span>
+          </button>
+          <button onclick="switchTab('protection')" id="tab-protection" class="inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+            <span>نظام الحماية</span>
+          </button>
+          <button onclick="switchTab('keys')" id="tab-keys" class="inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="key-round" class="w-4 h-4"></i>
+            <span>تخطي مفاتيح دلتا</span>
+          </button>
+          <button onclick="switchTab('music')" id="tab-music" class="inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="music" class="w-4 h-4"></i>
+            <span>نظام الأغاني</span>
+          </button>
+          <button onclick="switchTab('commands')" id="tab-commands" class="inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0">
+            <i data-lucide="terminal" class="w-4 h-4"></i>
+            <span>أوامر البوت</span>
+          </button>
+        </div>
+
+        <!-- Tab Contents Wrapper -->
+        <div id="tab-contents" class="mt-2 min-h-[40vh]">
+          
+          <!-- Content: Tickets Tab -->
+          <div id="content-tickets" class="tab-content flex flex-col gap-6">
+            <!-- Panels Manager Header -->
+            <div class="flex justify-between items-center bg-white/5 p-4 rounded-xl border border-white/5">
+              <div class="text-right">
+                <h3 class="text-white font-extrabold text-base">إدارة لوحات التذاكر المتعددة</h3>
+                <p class="text-xs text-gray-400">أنشئ لوحات تذاكر مخصصة لعرضها بأزرار أو قائمة منسدلة بالسيرفر</p>
+              </div>
+              <button onclick="openPanelCreator()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>إنشاء لوحة جديدة</span>
+              </button>
+            </div>
+
+            <!-- List of Panels -->
+            <div id="panels-list" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Panels rendered dynamically here -->
+            </div>
+
+            <!-- Panel Editor Box (Hidden by default, shown when creating/editing a panel) -->
+            <div id="panel-editor-box" class="hidden glass border-blue-500/20 bg-blue-500/5 p-6 rounded-2xl flex flex-col gap-6 shadow-xl text-right">
+              <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                <h4 id="panel-editor-title" class="text-blue-400 font-bold text-base flex items-center gap-2">
+                  <i data-lucide="edit-3" class="w-5 h-5"></i>
+                  <span>تعديل لوحة التذاكر</span>
+                </h4>
+                <button onclick="closePanelEditor()" class="text-gray-400 hover:text-white transition cursor-pointer">
+                  <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-right">
+                <!-- Right Form Column -->
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">معرف اللوحة الفريد (باللغة الإنجليزية وبدون مسافات):</label>
+                    <input id="p-id" type="text" placeholder="مثال: support-panel" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 text-left focus:outline-none focus:border-blue-500 transition">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">اسم اللوحة العام (للتعرف عليها بالداشبورد):</label>
+                    <input id="p-name" type="text" placeholder="مثال: الدعم الفني الرئيسي" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">عنوان إيمبد البانل بالديسكورد:</label>
+                    <input id="p-title" type="text" placeholder="مثال: تواصل مع الإدارة" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">وصف إيمبد البانل بالديسكورد:</label>
+                    <textarea id="p-desc" placeholder="مثال: يرجى الضغط على أحد الأزرار أدناه للتواصل..." class="w-full h-24 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">رسالة الترحيب التي تظهر بداخل التكت المفتوح:</label>
+                    <textarea id="p-welcome" placeholder="مثال: أهلاً بك، يرجى توضيح استفسارك وسيقوم فريق الدعم بالرد عليك قريباً." class="w-full h-24 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                  </div>
+                </div>
+
+                <!-- Left Form Column -->
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">طريقة عرض الخيارات للرواد:</label>
+                    <select id="p-displayType" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <option value="buttons" class="bg-slate-900">أزرار مستقلة (Buttons)</option>
+                      <option value="select" class="bg-slate-900">قائمة منسدلة (Select Menu)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">رتب الدعم الفني المخولة برؤية والتفاعل مع التكت:</label>
+                    <div id="p-roles-container" class="max-h-40 overflow-y-auto border border-white/10 bg-black/40 p-3 rounded-xl space-y-2">
+                      <!-- Live roles checkbox list -->
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1">💡 يرجى اختيار رتبة أو أكثر لتتمكن من إدارة تذاكر السيرفر.</p>
+                  </div>
+
+                  <!-- Buttons / Options Builder -->
+                  <div class="border border-white/5 bg-white/5 p-4 rounded-xl flex flex-col gap-3">
+                    <div class="flex justify-between items-center">
+                      <span class="text-xs font-bold text-gray-300">أزرار تفعيل التذاكر (Buttons/Options)</span>
+                      <button onclick="addBtnRow()" class="text-blue-400 hover:text-blue-300 text-xs font-bold flex items-center gap-1 cursor-pointer">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>إضافة زر/خيار جديد</span>
+                      </button>
+                    </div>
+
+                    <!-- Button list -->
+                    <div id="p-buttons-list" class="space-y-3">
+                      <!-- Dynamic list of buttons with inputs -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Editor Actions -->
+              <div class="flex justify-end gap-3 border-t border-white/5 pt-4">
+                <button onclick="closePanelEditor()" class="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition text-xs font-bold cursor-pointer">
+                  إلغاء التعديل
+                </button>
+                <button onclick="saveCurrentPanel()" class="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                  <span>حفظ لوحة التذاكر</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content: Suggestions Tab -->
+          <div id="content-suggestions" class="tab-content hidden flex flex-col gap-6">
+            <div class="glass p-6 rounded-2xl border border-white/5 flex flex-col gap-6 text-right">
+              <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <h4 class="text-white font-extrabold text-lg flex items-center gap-2">
+                  <i data-lucide="message-square" class="w-5 h-5 text-indigo-400"></i>
+                  <span>إعدادات نظام الاقتراحات التلقائي</span>
+                </h4>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" id="sug-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">روم إرسال الاقتراحات المعتمد:</label>
+                    <select id="sug-channelId" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <!-- Live channels -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">عنوان إيمبد الاقتراح بالديسكورد:</label>
+                    <input id="sug-title" type="text" placeholder="مثال: 💡 اقتراح جديد من عضو" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">وصف إيمبد الاقتراح الرئيسي:</label>
+                    <textarea id="sug-desc" placeholder="مثال: يرجى كتابة اقتراحك لتتم دراسته وتصويته من قبل الجميع." class="w-full h-24 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition resize-none"></textarea>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">رابط صورة إضافية للإيمبد (اختياري):</label>
+                    <input id="sug-image" type="text" placeholder="مثال: https://i.imgur.com/example.png" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 text-left focus:outline-none focus:border-blue-500 transition">
+                  </div>
+                  <div class="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 mt-4">
+                    <div>
+                      <span class="text-xs font-bold text-gray-300 block">استخدام صورة السيرفر الأساسية (Server Icon)</span>
+                      <span class="text-[10px] text-gray-400">لعرض أيقونة السيرفر على جانب إيمبد الاقتراحات</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer select-none">
+                      <input type="checkbox" id="sug-serverIcon" class="sr-only peer">
+                      <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content: Azkar Tab -->
+          <div id="content-azkar" class="tab-content hidden flex flex-col gap-6">
+            <div class="glass p-6 rounded-2xl border border-white/5 flex flex-col gap-6 text-right">
+              <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <h4 class="text-white font-extrabold text-lg flex items-center gap-2">
+                  <i data-lucide="scroll" class="w-5 h-5 text-emerald-400"></i>
+                  <span>إعدادات نظام الأذكار والآيات التلقائي</span>
+                </h4>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" id="azk-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">روم إرسال الأذكار التلقائي:</label>
+                    <select id="azk-channelId" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <!-- Live channels -->
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">معدل ووقت إرسال الأذكار والآيات بالدقائق:</label>
+                    <select id="azk-interval" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <option value="5" class="bg-slate-900">كل 5 دقائق (للاختبار والتجربة السريعة)</option>
+                      <option value="15" class="bg-slate-900">كل 15 دقيقة</option>
+                      <option value="30" class="bg-slate-900">كل 30 دقيقة</option>
+                      <option value="60" class="bg-slate-900">كل ساعة</option>
+                      <option value="120" class="bg-slate-900">كل ساعتين</option>
+                      <option value="360" class="bg-slate-900">كل 6 ساعات</option>
+                      <option value="720" class="bg-slate-900">كل 12 ساعة</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex flex-col justify-end gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">الرتبة التي يتم عمل منشن لها عند الإرسال (اختياري):</label>
+                    <select id="azk-roleId" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <option value="" class="bg-slate-900">بدون منشن (تعطيل المنشن)</option>
+                      <!-- Live roles list -->
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content: Protection Tab -->
+          <div id="content-protection" class="tab-content hidden flex flex-col gap-6 text-right">
+            <div class="glass p-6 rounded-2xl border border-white/5 flex flex-col gap-6">
+              <div class="border-b border-white/5 pb-4">
+                <h4 class="text-white font-extrabold text-lg flex items-center gap-2">
+                  <i data-lucide="shield" class="w-5 h-5 text-red-400"></i>
+                  <span>نظام الحماية والأمان العالي (Antigravity Antiraid)</span>
+                </h4>
+                <p class="text-xs text-gray-400 mt-1">فعل خيارات حماية السيرفر الفائقة مع اختيار العقوبة والمدة الزمنية في حال مخالفة الأنظمة.</p>
+              </div>
+
+              <!-- Grid of protections -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="protection-settings-grid">
+                <!-- Protection items (Permissions, Roles, Channels, Bots, Links, Spam) dynamically rendered or updated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Content: Delta Keys Tab -->
+          <div id="content-keys" class="tab-content hidden flex flex-col gap-6 text-right">
+            <div class="glass p-6 rounded-2xl border border-white/5 flex flex-col gap-6">
+              <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <h4 class="text-white font-extrabold text-lg flex items-center gap-2">
+                  <i data-lucide="key-round" class="w-5 h-5 text-yellow-400"></i>
+                  <span>نظام تخطي مفاتيح دلتا (Delta Bypass Engine)</span>
+                </h4>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" id="key-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">روم طلبات وتخطي المفاتيح:</label>
+                    <select id="key-channelId" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <!-- Live channels -->
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-1.5">طريقة عمل نظام التخطي المعتمدة:</label>
+                    <select id="key-method" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-gray-200 focus:outline-none focus:border-blue-500 transition font-sans">
+                      <option value="link" class="bg-slate-900">تخطي الروابط المرسلة تلقائياً (Link Bypass)</option>
+                      <option value="command" class="bg-slate-900">أمر سلاش فقط /delta (Slash Command)</option>
+                      <option value="both" class="bg-slate-900">كليهما معاً (الروابط المرسلة وأوامر السلاش)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content: Music Tab -->
+          <div id="content-music" class="tab-content hidden flex flex-col gap-6 text-right">
+            <div class="glass p-6 rounded-2xl border border-white/5 flex flex-col gap-6">
+              <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                <div>
+                  <h4 class="text-white font-extrabold text-lg flex items-center gap-2">
+                    <i data-lucide="music" class="w-5 h-5 text-purple-400"></i>
+                    <span>نظام تشغيل الأغاني والقرآن (Music System)</span>
+                  </h4>
+                  <p class="text-xs text-gray-400 mt-1">تفعيل أو تعطيل الأوامر الموسيقية والتشغيل الصوتي في السيرفر بشكل كامل</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" id="mus-enabled" class="sr-only peer">
+                  <div class="w-11 h-6 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex items-start gap-4">
+                <div class="p-3 bg-purple-500/10 text-purple-400 rounded-xl">
+                  <i data-lucide="info" class="w-6 h-6"></i>
+                </div>
+                <div class="text-gray-300 text-sm leading-relaxed">
+                  عند تفعيل هذا النظام، سيتمكن أعضاء سيرفرك من استخدام الأوامر الموسيقية مثل <code class="font-mono bg-black/30 px-1.5 py-0.5 rounded text-yellow-400">/play</code>، <code class="font-mono bg-black/30 px-1.5 py-0.5 rounded text-yellow-400">/stop</code>، <code class="font-mono bg-black/30 px-1.5 py-0.5 rounded text-yellow-400">/skip</code> لتشغيل الملفات الصوتية بداخل قنوات الصوت بسلاسة.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content: Bot Commands Tab -->
+          <div id="content-commands" class="tab-content hidden flex flex-col gap-6 text-right">
+            <div class="glass p-6 rounded-2xl border border-white/5 flex flex-col gap-4">
+              <div class="border-b border-white/5 pb-4">
+                <h4 class="text-white font-extrabold text-lg flex items-center gap-2">
+                  <i data-lucide="terminal" class="w-5 h-5 text-blue-400"></i>
+                  <span>جميع الأوامر المتاحة في البوت NTL</span>
+                </h4>
+                <p class="text-xs text-gray-400">قائمة استعراضية شاملة لأوامر السلاش وأنواع الصلاحيات المطلوبة لتشغيلها في ديسكورد.</p>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                  <thead>
+                    <tr class="border-b border-white/5 text-gray-400 font-extrabold text-xs">
+                      <th class="py-3 px-4">الأمر (Command)</th>
+                      <th class="py-3 px-4">القسم والوظيفة</th>
+                      <th class="py-3 px-4 text-center">الصلاحيات</th>
+                    </tr>
+                  </thead>
+                  <tbody class="text-gray-200 divide-y divide-white/5 font-sans">
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/setup_ticket</td>
+                      <td class="py-3 px-4">فتح وإعداد نظام التذاكر المتكامل للسيرفر</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/10">مدير السيرفر</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/setup_azkar</td>
+                      <td class="py-3 px-4">ضبط وتنشيط الأذكار والآيات التلقائية بالروم المحدد</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/10">مدير السيرفر</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/setup_suggestion</td>
+                      <td class="py-3 px-4">ضبط روم الاقتراحات وإرسال قالب التصويت الفوري</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/10">مدير السيرفر</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/protection</td>
+                      <td class="py-3 px-4">عرض خيارات الحماية وتعديل أنظمة كشف الثغرات والسبام</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/10">مدير السيرفر</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/delta &lt;link&gt;</td>
+                      <td class="py-3 px-4">تخطي يدوي لرابط مفاتيح دلتا والحصول على المفتاح فوراً</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/10">للجميع</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/key &lt;on/off&gt;</td>
+                      <td class="py-3 px-4">تفعيل أو تعطيل حامي المفاتيح التلقائي</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-red-500/10 text-red-400 text-xs font-bold border border-red-500/10">مدير السيرفر</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/play &lt;song&gt;</td>
+                      <td class="py-3 px-4">البحث وتشغيل الموسيقى والقرآن بالروم الصوتي</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/10">للجميع</span></td>
+                    </tr>
+                    <tr>
+                      <td class="py-3 px-4 font-mono text-yellow-400">/ai &lt;query&gt;</td>
+                      <td class="py-3 px-4">سؤال المساعد الذكي الاصطناعي بنظام الموديلات الفائقة</td>
+                      <td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs font-bold border border-green-500/10">للجميع</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Footer actions in Command Panel -->
+        <div class="flex justify-end gap-4 mt-6 border-t border-white/5 pt-6">
+          <button onclick="backToGuilds()" class="px-5 py-2.5 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white transition font-semibold cursor-pointer">
+            <span>إلغاء وتراجع</span>
+          </button>
+          <button onclick="saveAllGuildSettings()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold px-8 py-2.5 rounded-xl shadow-lg shadow-blue-500/20 flex items-center gap-2 transition transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
+            <i data-lucide="save" class="w-4 h-4"></i>
+            <span>حفظ جميع إعدادات الأنظمة الفورية</span>
+          </button>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- TOAST FLOATING NOTIFICATIONS -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto border-t border-white/5 py-6 bg-black/40 text-center relative z-10 text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p>© 2026 بوت NTL. جميع الحقوق محفوظة.</p>
+      <p class="flex items-center gap-1 justify-center">
+        <span>تم التطوير والمحاذاة الفورية لـ ديسكورد</span>
+        <span class="text-red-500">❤️</span>
+      </p>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // Global State
+    let currentUser = null;
+    let userGuilds = [];
+    let configStatus = null;
+    let selectedGuild = null;
+
+    // Dynamic API URL Helper (useful for Cloudflare Pages targeting independent Bot-Hosting)
+    function getApiUrl(path) {
+      const baseUrl = localStorage.getItem("ntl_api_base_url") || "";
+      const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+      const cleanPath = path.startsWith('/') ? path : '/' + path;
+      return cleanBase ? `${cleanBase}${cleanPath}` : cleanPath;
+    }
+
+    // Toggle Settings Panel
+    function toggleSettingsPanel() {
+      const panel = document.getElementById("api-settings-panel");
+      panel.classList.toggle("hidden");
+      
+      // Load saved value into input if opened
+      if (!panel.classList.contains("hidden")) {
+        const savedUrl = localStorage.getItem("ntl_api_base_url") || "";
+        document.getElementById("api-base-url-input").value = savedUrl;
+      }
+    }
+
+    // Save API Base URL from settings input
+    function saveApiBaseUrl() {
+      const inputVal = document.getElementById("api-base-url-input").value.trim();
+      if (inputVal) {
+        try {
+          if (!inputVal.startsWith("http://") && !inputVal.startsWith("https://")) {
+            showToast("الرجاء إدخال رابط صحيح يبدأ بـ http:// أو https://", "error");
+            return;
+          }
+          localStorage.setItem("ntl_api_base_url", inputVal);
+          showToast("تم حفظ رابط خادم الـ API بنجاح! جاري إعادة التحميل للتطبيق...", "success");
+        } catch (e) {
+          showToast("خطأ أثناء حفظ الرابط.", "error");
+          return;
+        }
+      } else {
+        localStorage.removeItem("ntl_api_base_url");
+        showToast("تم مسح الرابط بنجاح! سيتم استخدام الرابط المحلي التلقائي.", "success");
+      }
+      
+      // Reload page to re-fetch configuration status with new Base URL
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    }
+    
+    // On Document Load
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Re-render lucide icons
+      lucide.createIcons();
+      
+      // Populate settings input initially
+      const savedApiUrl = localStorage.getItem("ntl_api_base_url") || "";
+      const input = document.getElementById("api-base-url-input");
+      if (input) input.value = savedApiUrl;
+      
+      // Load configuration status from backend
+      await checkConfigStatus();
+      
+      // Check if user is logged in
+      const savedUser = localStorage.getItem("ntl_user");
+      const savedToken = localStorage.getItem("ntl_access_token");
+      const savedGuilds = localStorage.getItem("ntl_guilds");
+      
+      if (savedUser && savedToken && savedGuilds) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          userGuilds = JSON.parse(savedGuilds);
+          
+          showLoggedInState(currentUser);
+          
+          // Refresh guilds in the background silently
+          refreshGuildsSilently(savedToken);
+        } catch (e) {
+          console.error("Failed to parse saved session", e);
+          logout();
+        }
+      } else {
+        showGuestState();
+      }
+    });
+
+    // Check Configuration status from express server
+    async function checkConfigStatus() {
+      try {
+        const res = await fetch(getApiUrl("/api/config-status"));
+        if (res.ok) {
+          configStatus = await res.json();
+          
+          // Setup Redirect URI input box
+          const redirectBox = document.getElementById("redirect-uri-box");
+          if (redirectBox && configStatus.redirectUri) {
+            redirectBox.value = configStatus.redirectUri;
+          }
+
+          // If config is missing elements, display alert
+          const setupAlert = document.getElementById("setup-alert");
+          if (!configStatus.clientConfigured || !configStatus.secretConfigured || !configStatus.botConfigured) {
+            setupAlert.classList.remove("hidden");
+          } else {
+            setupAlert.classList.add("hidden");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch configuration status:", err);
+      }
+    }
+
+    // Copy Redirect URI Helper
+    function copyRedirectUri() {
+      const copyText = document.getElementById("redirect-uri-box");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(copyText.value);
+      showToast("تم نسخ رابط التوجيه بنجاح!", "success");
+    }
+
+    // Toggle view helper
+    function showSection(sectionId) {
+      const guest = document.getElementById("viewport-guest");
+      const guilds = document.getElementById("viewport-guilds");
+      const commands = document.getElementById("viewport-commands");
+      
+      guest.classList.add("hidden");
+      guilds.classList.add("hidden");
+      commands.classList.add("hidden");
+      
+      document.getElementById(sectionId).classList.remove("hidden");
+    }
+
+    // Update UI elements for logged in state
+    function showLoggedInState(user) {
+      document.getElementById("btn-login").classList.add("hidden");
+      document.getElementById("user-profile").classList.remove("hidden");
+      
+      document.getElementById("user-name").textContent = user.username + (user.discriminator && user.discriminator !== "0" ? `#${user.discriminator}` : "");
+      
+      // Avatar resolution
+      const avatarImg = document.getElementById("user-avatar");
+      if (user.avatar) {
+        avatarImg.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
+      } else {
+        avatarImg.src = `https://cdn.discordapp.com/embed/avatars/0.png`;
+      }
+      
+      showSection("viewport-guilds");
+      renderGuildsGrid();
+    }
+
+    // Update UI for guest state
+    function showGuestState() {
+      document.getElementById("btn-login").classList.remove("hidden");
+      document.getElementById("user-profile").classList.add("hidden");
+      showSection("viewport-guest");
+    }
+
+    // Handle Discord Login Window Popup
+    function loginWithDiscord() {
+      const width = 500;
+      const height = 800;
+      const left = (screen.width - width) / 2;
+      const top = (screen.height - height) / 2;
+      
+      const authWindow = window.open(
+        getApiUrl('/api/auth/login'),
+        'Discord_Auth_Popup',
+        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
+      );
+      
+      if (!authWindow) {
+        showToast("يرجى السماح بالروابط المنبثقة لتسجيل الدخول.", "error");
+      }
+    }
+
+    // Listen for OAuth complete postMessage from Popup
+    window.addEventListener("message", (event) => {
+      // Validate origin if needed, or simply handle
+      if (event.data && event.data.type === "OAUTH_AUTH_SUCCESS") {
+        const { accessToken, user, guilds } = event.data;
+        
+        currentUser = user;
+        userGuilds = guilds;
+        
+        localStorage.setItem("ntl_access_token", accessToken);
+        localStorage.setItem("ntl_user", JSON.stringify(user));
+        localStorage.setItem("ntl_guilds", JSON.stringify(guilds));
+        
+        showLoggedInState(user);
+        showToast("مرحباً بك! تم تسجيل الدخول بنجاح.", "success");
+      }
+    });
+
+    // Logout
+    function logout() {
+      currentUser = null;
+      userGuilds = [];
+      selectedGuild = null;
+      localStorage.removeItem("ntl_access_token");
+      localStorage.removeItem("ntl_user");
+      localStorage.removeItem("ntl_guilds");
+      showGuestState();
+      showToast("تم تسجيل الخروج بنجاح.", "info");
+    }
+
+    // Refresh Guild List inside token context
+    async function refreshGuildsList() {
+      const token = localStorage.getItem("ntl_access_token");
+      if (!token) return;
+
+      const refreshIcon = document.getElementById("icon-refresh");
+      refreshIcon.classList.add("animate-spin");
+
+      try {
+        const res = await fetch(getApiUrl("/api/guilds"), {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            userGuilds = data.guilds;
+            localStorage.setItem("ntl_guilds", JSON.stringify(userGuilds));
+            renderGuildsGrid();
+            showToast("تم تحديث قائمة السيرفرات بنجاح.", "success");
+          }
+        } else {
+          showToast("فشل تحديث السيرفرات، يرجى إعادة تسجيل الدخول.", "error");
+        }
+      } catch (e) {
+        console.error(e);
+        showToast("حدث خطأ أثناء الاتصال بالخادم.", "error");
+      } finally {
+        refreshIcon.classList.remove("animate-spin");
+      }
+    }
+
+    // Silent Refresh on Load
+    async function refreshGuildsSilently(token) {
+      try {
+        const res = await fetch(getApiUrl("/api/guilds"), {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            userGuilds = data.guilds;
+            localStorage.setItem("ntl_guilds", JSON.stringify(userGuilds));
+            renderGuildsGrid();
+          }
+        }
+      } catch (e) {
+        console.warn("Background guild refresh failed:", e);
+      }
+    }
+
+    // Go back to guilds selection
+    function backToGuilds() {
+      selectedGuild = null;
+      showSection("viewport-guilds");
+    }
+
+    // Go Home view
+    function goHome() {
+      if (currentUser) {
+        showSection("viewport-guilds");
+      } else {
+        showSection("viewport-guest");
+      }
+    }
+
+    // Render Guild Cards Grid
+    function renderGuildsGrid() {
+      const grid = document.getElementById("guilds-grid");
+      const loader = document.getElementById("guilds-loader");
+      const emptyState = document.getElementById("guilds-empty-state");
+      
+      loader.classList.add("hidden");
+      grid.innerHTML = "";
+      
+      if (!userGuilds || userGuilds.length === 0) {
+        emptyState.classList.remove("hidden");
+        grid.classList.add("hidden");
+        return;
+      }
+      
+      emptyState.classList.add("hidden");
+      grid.classList.remove("hidden");
+      
+      userGuilds.forEach(guild => {
+        const card = document.createElement("div");
+        card.className = "glass-card rounded-2xl p-6 flex flex-col gap-6 relative overflow-hidden shadow-md cursor-pointer";
+        card.setAttribute("onclick", `selectGuild('${guild.id}', '${guild.name.replace(/'/g, "\\'")}', '${guild.icon}')`);
+        
+        // Cover top border accent
+        const accentColor = guild.hasBot ? "from-blue-500 to-indigo-600" : "from-slate-600 to-slate-800";
+        card.innerHTML = `
+          <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${accentColor}"></div>
+          
+          <!-- Guild Identity Info -->
+          <div class="flex items-center gap-4">
+            ${getGuildIconElement(guild.id, guild.name, guild.icon)}
+            <div class="flex flex-col gap-0.5">
+              <span class="text-white font-extrabold text-base line-clamp-1">${guild.name}</span>
+              <span class="text-xs text-gray-500 font-mono">ID: ${guild.id}</span>
+            </div>
+          </div>
+          
+          <!-- Bottom Info / Presence Status -->
+          <div class="flex items-center justify-between mt-2 pt-4 border-t border-white/5">
+            ${guild.hasBot ? `
+              <span class="text-xs font-bold text-emerald-400 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-dot block"></span>
+                <span>متصل ونشط</span>
+              </span>
+              <button class="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-4 py-2 rounded-lg transition duration-200 shadow-md shadow-blue-500/10 cursor-pointer">
+                إعداد الأوامر
+              </button>
+            ` : `
+              <span class="text-xs font-bold text-amber-500 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 block"></span>
+                <span>البوت غائب</span>
+              </span>
+              <button onclick="event.stopPropagation(); inviteBot('${guild.id}')" class="bg-white/5 hover:bg-white/10 text-gray-200 border border-white/5 hover:border-white/10 font-bold text-xs px-4 py-2 rounded-lg transition duration-200 cursor-pointer">
+                دعوة البوت
+              </button>
+            `}
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      
+      lucide.createIcons();
+    }
+
+    // Guild Icon Element Builder
+    function getGuildIconElement(guildId, guildName, iconHash) {
+      if (iconHash && iconHash !== 'null') {
+        return `<img src="https://cdn.discordapp.com/icons/${guildId}/${iconHash}.png?size=128" alt="${guildName}" class="w-14 h-14 rounded-xl border border-white/5 shadow-md object-cover">`;
+      } else {
+        // Build letter placeholder with initials
+        const initials = guildName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        return `
+          <div class="w-14 h-14 rounded-xl bg-gradient-to-tr from-blue-900/30 to-indigo-900/40 border border-blue-500/20 flex items-center justify-center shadow-inner">
+            <span class="text-blue-400 font-black text-lg tracking-wider">${initials || 'G'}</span>
+          </div>
+        `;
+      }
+    }
+
+    // Invite bot to specific Guild
+    function inviteBot(guildId) {
+      const clientId = configStatus && configStatus.clientConfigured ? configStatus.clientId : "";
+      const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${configStatus.clientId || 'YOUR_CLIENT_ID'}&guild_id=${guildId}&permissions=8&scope=bot%20applications.commands`;
+      
+      window.open(inviteUrl, '_blank', 'width=500,height=800');
+    }
+
+    // Extended Global State for settings management
+    let currentGuildSettings = {
+      panels: {},
+      suggestions: { enabled: false, channelId: "", title: "", desc: "", image: "", serverIcon: false },
+      azkar: { enabled: false, channelId: "", interval: "60", roleId: "" },
+      protection: {
+        permissions: { enabled: false, punishment: "kick", punishmentDuration: "" },
+        roles: { enabled: false, punishment: "kick", punishmentDuration: "" },
+        channels: { enabled: false, punishment: "kick", punishmentDuration: "" },
+        bots: { enabled: false, punishment: "ban", punishmentDuration: "" },
+        links: { enabled: false, punishment: "timeout", punishmentDuration: "1h" },
+        spam: { enabled: false, punishment: "timeout", punishmentDuration: "10m" }
+      },
+      musicEnabled: false,
+      deltaKeys: { enabled: false, channelId: "", method: "link" }
+    };
+    
+    let guildChannels = [];
+    let guildCategories = [];
+    let guildRoles = [];
+    let currentActiveTab = "tickets";
+    let editingPanelId = null;
+
+    // Switch config panel tabs beautifully
+    function switchTab(tabId) {
+      currentActiveTab = tabId;
+      
+      // Update Tab Button States
+      const tabIds = ['tickets', 'suggestions', 'azkar', 'protection', 'keys', 'music', 'commands'];
+      tabIds.forEach(id => {
+        const btn = document.getElementById(`tab-${id}`);
+        if (!btn) return;
+        if (id === tabId) {
+          btn.className = "active-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0";
+        } else {
+          btn.className = "inactive-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition duration-200 cursor-pointer shrink-0";
+        }
+      });
+
+      // Update Tab Content Viewports
+      const contents = document.querySelectorAll(".tab-content");
+      contents.forEach(el => el.classList.add("hidden"));
+      
+      const targetContent = document.getElementById(`content-${tabId}`);
+      if (targetContent) {
+        targetContent.classList.remove("hidden");
+      }
+      
+      lucide.createIcons();
+    }
+
+    // Select Guild to manage commands & Fetch Settings dynamically
+    async function selectGuild(guildId, guildName, iconHash) {
+      selectedGuild = { id: guildId, name: guildName, icon: iconHash };
+      
+      // Update selected guild UI
+      document.getElementById("selected-guild-name").textContent = guildName;
+      
+      const avatarContainer = document.getElementById("selected-guild-avatar-container");
+      avatarContainer.innerHTML = getGuildIconElement(guildId, guildName, iconHash);
+      
+      // Switch view to command panel
+      showSection("viewport-commands");
+      
+      // Display a beautiful loading skeleton / toast
+      showToast("جاري تحميل بيانات السيرفر والقنوات من ديسكورد...", "info");
+      
+      try {
+        const res = await fetch(getApiUrl(`/api/guild-settings/${guildId}`));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            currentGuildSettings = data.settings;
+            guildChannels = data.channels || [];
+            guildCategories = data.categories || [];
+            guildRoles = data.roles || [];
+            
+            // Map defaults if keys are missing
+            if (!currentGuildSettings.panels) currentGuildSettings.panels = {};
+            if (!currentGuildSettings.suggestions) {
+              currentGuildSettings.suggestions = { enabled: false, channelId: "", title: "", desc: "", image: "", serverIcon: false };
+            }
+            if (!currentGuildSettings.azkar) {
+              currentGuildSettings.azkar = { enabled: false, channelId: "", interval: "60", roleId: "" };
+            }
+            if (!currentGuildSettings.deltaKeys) {
+              currentGuildSettings.deltaKeys = { enabled: false, channelId: "", method: "link" };
+            }
+            if (!currentGuildSettings.protection) {
+              currentGuildSettings.protection = {
+                permissions: { enabled: false, punishment: "kick", punishmentDuration: "" },
+                roles: { enabled: false, punishment: "kick", punishmentDuration: "" },
+                channels: { enabled: false, punishment: "kick", punishmentDuration: "" },
+                bots: { enabled: false, punishment: "ban", punishmentDuration: "" },
+                links: { enabled: false, punishment: "timeout", punishmentDuration: "1h" },
+                spam: { enabled: false, punishment: "timeout", punishmentDuration: "10m" }
+              };
+            }
+
+            // Populate all Tab values dynamically!
+            applyLoadedSettings();
+            
+            // Default to tickets tab on load
+            switchTab("tickets");
+            showToast("تم تحميل الإعدادات بنجاح!", "success");
+          }
+        }
+      } catch (e) {
+        console.error("Error loading guild settings:", e);
+        showToast("حدث خطأ أثناء تحميل إعدادات السيرفر من الخادم.", "error");
+      }
+    }
+
+    // Apply retrieved values from currentGuildSettings and populates standard inputs/options
+    function applyLoadedSettings() {
+      // 1. Tickets List Rendering
+      renderPanels();
+      closePanelEditor(); // Reset editor state
+
+      // Populate Live channels dropdowns
+      const channelSelects = ['sug-channelId', 'azk-channelId', 'key-channelId'];
+      channelSelects.forEach(selId => {
+        const select = document.getElementById(selId);
+        if (!select) return;
+        select.innerHTML = "";
+        
+        if (guildChannels.length === 0) {
+          select.innerHTML = `<option value="" class="bg-slate-900">⚠️ لا توجد قنوات كتابية متاحة</option>`;
+        } else {
+          guildChannels.forEach(ch => {
+            const opt = document.createElement("option");
+            opt.value = ch.id;
+            opt.textContent = `# ${ch.name}`;
+            opt.className = "bg-slate-900";
+            select.appendChild(opt);
+          });
+        }
+      });
+
+      // Populate Live roles dropdown for Azkar Mention
+      const azkRoleSelect = document.getElementById("azk-roleId");
+      if (azkRoleSelect) {
+        azkRoleSelect.innerHTML = `<option value="" class="bg-slate-900">بدون منشن (تعطيل المنشن)</option>`;
+        guildRoles.forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.textContent = `@ ${r.name}`;
+          opt.className = "bg-slate-900";
+          azkRoleSelect.appendChild(opt);
+        });
+      }
+
+      // 2. Suggestions Form Fields
+      const sug = currentGuildSettings.suggestions;
+      document.getElementById("sug-enabled").checked = !!sug.enabled;
+      document.getElementById("sug-channelId").value = sug.channelId || "";
+      document.getElementById("sug-title").value = sug.title || "💡 اقتراح جديد من عضو";
+      document.getElementById("sug-desc").value = sug.desc || "يرجى كتابة اقتراحك لتتم دراسته وتصويته من قبل الجميع.";
+      document.getElementById("sug-image").value = sug.image || "";
+      document.getElementById("sug-serverIcon").checked = !!sug.serverIcon;
+
+      // 3. Azkar Form Fields
+      const azk = currentGuildSettings.azkar;
+      document.getElementById("azk-enabled").checked = !!azk.enabled;
+      document.getElementById("azk-channelId").value = azk.channelId || "";
+      document.getElementById("azk-interval").value = azk.interval || "60";
+      document.getElementById("azk-roleId").value = azk.roleId || "";
+
+      // 4. Music Form Fields
+      document.getElementById("mus-enabled").checked = !!currentGuildSettings.musicEnabled;
+
+      // 5. Delta Keys Form Fields
+      const keys = currentGuildSettings.deltaKeys;
+      document.getElementById("key-enabled").checked = !!keys.enabled;
+      document.getElementById("key-channelId").value = keys.channelId || "";
+      document.getElementById("key-method").value = keys.method || "link";
+
+      // 6. Protection Grid Cards Builder (Dynamically rendered to handle custom settings cleanly)
+      renderProtectionGrid();
+    }
+
+    // Render protection cards dynamic form
+    function renderProtectionGrid() {
+      const grid = document.getElementById("protection-settings-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      const labelsMap = {
+        permissions: { title: "حماية صلاحيات الإدارة", desc: "منع الأعضاء ورتب التوكن من سحب صلاحية الأدمن أو رتب الإدارة الحساسة" },
+        roles: { title: "حماية تعديل الرتب والوظائف", desc: "منع صناعة رتب عشوائية، حذف رتب رئيسية، أو اللعب بإعدادات الهرم السيرفري" },
+        channels: { title: "حماية تعديل وحذف الغرف", desc: "الحماية ضد التخريب ومسح القنوات بشكل هستيري أو مفاجئ" },
+        bots: { title: "منع دخول البوتات العشوائية", desc: "طرد تلقائي وفوري لأي بوت غريب يدخل السيرفر إلا برمز مصادقة أو أذن الإدارة" },
+        links: { title: "منع إرسال روابط الإعلانات", desc: "رصد فوري لروابط ديسكورد وسيرفرات أخرى وتطبيق عقوبة فورية لحماية مجتمعك" },
+        spam: { title: "منع السبام والتكرار السريع", desc: "كشف الإرسال المتكرر السريع وعمل ميوت تلقائي للعضو لمنع الهجمات" }
+      };
+
+      const prot = currentGuildSettings.protection;
+      
+      Object.keys(labelsMap).forEach(key => {
+        const item = prot[key] || { enabled: false, punishment: "kick", punishmentDuration: "" };
+        const data = labelsMap[key];
+
+        const card = document.createElement("div");
+        card.className = "glass p-5 rounded-2xl border border-white/5 flex flex-col gap-4 text-right";
+        card.innerHTML = `
+          <!-- Card Header -->
+          <div class="flex justify-between items-center border-b border-white/5 pb-3">
+            <div class="flex items-center gap-2.5">
+              <div class="p-2 rounded-lg ${item.enabled ? 'bg-red-500/10 text-red-400' : 'bg-slate-500/10 text-slate-400'}">
+                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-white font-extrabold text-sm">${data.title}</span>
+                <span class="text-[10px] text-gray-500">${data.desc}</span>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer select-none">
+              <input type="checkbox" id="prot-enabled-${key}" onchange="toggleProtSwitch('${key}')" class="sr-only peer" ${item.enabled ? 'checked' : ''}>
+              <div class="w-9 h-5 bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-blue-500/50 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-600"></div>
+            </label>
+          </div>
+
+          <!-- Configuration Inputs (Smooth collapse style) -->
+          <div id="prot-config-box-${key}" class="${item.enabled ? 'block' : 'hidden'} grid grid-cols-2 gap-3.5 pt-1">
+            <div>
+              <label class="block text-[10px] font-bold text-gray-400 mb-1">عقوبة المخالف:</label>
+              <select id="prot-punishment-${key}" class="w-full bg-black/40 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-red-500 transition font-sans">
+                <option value="kick" class="bg-slate-900" ${item.punishment === 'kick' ? 'selected' : ''}>طرد من السيرفر (Kick)</option>
+                <option value="ban" class="bg-slate-900" ${item.punishment === 'ban' ? 'selected' : ''}>حظر دائم (Ban)</option>
+                <option value="timeout" class="bg-slate-900" ${item.punishment === 'timeout' ? 'selected' : ''}>كتم مؤقت (Timeout)</option>
+                <option value="role_remove" class="bg-slate-900" ${item.punishment === 'role_remove' ? 'selected' : ''}>سحب جميع الرتب</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[10px] font-bold text-gray-400 mb-1">مدة العقوبة (إذا كتم):</label>
+              <input id="prot-duration-${key}" type="text" placeholder="مثال: 10m أو 1h" value="${item.punishmentDuration || ''}" class="w-full bg-black/40 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-gray-200 text-left focus:outline-none focus:border-red-500 transition">
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // Toggle Protection switch state block
+    function toggleProtSwitch(key) {
+      const checkbox = document.getElementById(`prot-enabled-${key}`);
+      const configBox = document.getElementById(`prot-config-box-${key}`);
+      if (checkbox.checked) {
+        configBox.classList.remove("hidden");
+      } else {
+        configBox.classList.add("hidden");
+      }
+    }
+
+    // Render Panels inside current settings
+    function renderPanels() {
+      const list = document.getElementById("panels-list");
+      if (!list) return;
+      list.innerHTML = "";
+
+      const panels = currentGuildSettings.panels || {};
+      const panelIds = Object.keys(panels);
+
+      if (panelIds.length === 0) {
+        list.innerHTML = `
+          <div class="col-span-1 md:col-span-2 glass border-dashed border-white/10 p-8 rounded-2xl flex flex-col items-center justify-center text-center gap-3">
+            <div class="p-3 bg-blue-500/10 text-blue-400 rounded-full">
+              <i data-lucide="folder-open" class="w-6 h-6"></i>
+            </div>
+            <div class="flex flex-col">
+              <span class="text-white font-black text-sm">لا توجد لوحات تذاكر حالية</span>
+              <span class="text-xs text-gray-400">يرجى الضغط على "إنشاء لوحة جديدة" لبدء تنظيم تذاكر سيرفرك.</span>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      panelIds.forEach(id => {
+        const p = panels[id];
+        const buttonsCount = p.buttons ? p.buttons.length : 0;
+        const displayLabel = p.displayType === 'select' ? 'قائمة منسدلة (Select Menu)' : 'أزرار (Buttons)';
+        
+        const card = document.createElement("div");
+        card.className = "glass p-5 rounded-2xl border border-white/5 flex flex-col justify-between gap-5 text-right relative";
+        card.innerHTML = `
+          <div class="flex flex-col gap-2">
+            <div class="flex justify-between items-start">
+              <span class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-mono border border-blue-500/10 font-bold">${id}</span>
+              <span class="text-xs text-gray-500 font-bold">${displayLabel}</span>
+            </div>
+            <h4 class="text-white font-extrabold text-base">${p.name || 'بانل تذاكر مجهول'}</h4>
+            <p class="text-xs text-gray-400 line-clamp-2 leading-relaxed">${p.title || ''} - ${p.desc || ''}</p>
+          </div>
+
+          <div class="flex items-center justify-between border-t border-white/5 pt-3 mt-1">
+            <span class="text-[11px] text-gray-400 flex items-center gap-1">
+              <i data-lucide="layers" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>عدد الأزرار والخيارات المتاحة: <strong class="text-white font-mono">${buttonsCount}</strong></span>
+            </span>
+
+            <div class="flex gap-2">
+              <button onclick="openPanelEditor('${id}')" class="p-2 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-600/10 transition cursor-pointer" title="تعديل لوحة التذاكر">
+                <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+              </button>
+              <button onclick="removePanel('${id}')" class="p-2 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-600/10 transition cursor-pointer" title="حذف لوحة التذاكر">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+      lucide.createIcons();
+    }
+
+    // Open Creator (Create brand new empty ticket panel)
+    function openPanelCreator() {
+      editingPanelId = null;
+      document.getElementById("panel-editor-box").classList.remove("hidden");
+      document.getElementById("panel-editor-title").innerHTML = `
+        <i data-lucide="plus-circle" class="w-5 h-5 text-blue-500"></i>
+        <span>إنشاء لوحة تذاكر جديدة</span>
+      `;
+
+      // Defaults
+      const randomId = "panel-" + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById("p-id").value = randomId;
+      document.getElementById("p-id").disabled = false;
+      document.getElementById("p-name").value = "";
+      document.getElementById("p-title").value = "تواصل مع فريق الدعم";
+      document.getElementById("p-desc").value = "يرجى الضغط على أحد الخيارات أدناه لفتح تذكرة ومحادثة الدعم الفني.";
+      document.getElementById("p-welcome").value = "مرحباً بك في تذكرة الدعم! يرجى كتابة استفسارك وسيقوم طاقم الإشراف بالرد قريباً.";
+      document.getElementById("p-displayType").value = "buttons";
+      
+      // Load Roles List checkboxes
+      renderSupportRolesCheckboxes([]);
+
+      // Clear button list rows
+      const btnList = document.getElementById("p-buttons-list");
+      btnList.innerHTML = "";
+      addBtnRow(); // Add first blank row by default
+
+      // Scroll to editor beautifully
+      document.getElementById("panel-editor-box").scrollIntoView({ behavior: 'smooth' });
+      lucide.createIcons();
+    }
+
+    // Open Editor for existing Ticket Panel
+    function openPanelEditor(panelId) {
+      editingPanelId = panelId;
+      const panels = currentGuildSettings.panels || {};
+      const p = panels[panelId];
+      if (!p) return;
+
+      document.getElementById("panel-editor-box").classList.remove("hidden");
+      document.getElementById("panel-editor-title").innerHTML = `
+        <i data-lucide="edit-3" class="w-5 h-5 text-blue-500"></i>
+        <span>تعديل لوحة التذاكر (${panelId})</span>
+      `;
+
+      document.getElementById("p-id").value = panelId;
+      document.getElementById("p-id").disabled = true; // Cannot rename ID after creation to prevent key desync
+      document.getElementById("p-name").value = p.name || "";
+      document.getElementById("p-title").value = p.title || "";
+      document.getElementById("p-desc").value = p.desc || "";
+      document.getElementById("p-welcome").value = p.welcome || "";
+      document.getElementById("p-displayType").value = p.displayType || "buttons";
+
+      // Render support roles
+      renderSupportRolesCheckboxes(p.supportRoles || []);
+
+      // Build buttons lists
+      const btnList = document.getElementById("p-buttons-list");
+      btnList.innerHTML = "";
+      const buttons = p.buttons || [];
+      if (buttons.length === 0) {
+        addBtnRow();
+      } else {
+        buttons.forEach(b => addBtnRow(b));
+      }
+
+      document.getElementById("panel-editor-box").scrollIntoView({ behavior: 'smooth' });
+      lucide.createIcons();
+    }
+
+    // Render support roles checklists
+    function renderSupportRolesCheckboxes(selectedRoles = []) {
+      const container = document.getElementById("p-roles-container");
+      if (!container) return;
+      container.innerHTML = "";
+
+      if (guildRoles.length === 0) {
+        container.innerHTML = `<span class="text-xs text-gray-500">⚠️ لم نتمكن من العثور على رتب السيرفر، يرجى التأكد من تشغيل البوت.</span>`;
+        return;
+      }
+
+      guildRoles.forEach(r => {
+        const div = document.createElement("div");
+        div.className = "flex items-center gap-2";
+        const checked = selectedRoles.includes(r.id) ? "checked" : "";
+        div.innerHTML = `
+          <input type="checkbox" id="role-chk-${r.id}" value="${r.id}" ${checked} class="rounded border-white/10 bg-black/40 text-blue-600 focus:ring-blue-500">
+          <label for="role-chk-${r.id}" class="text-xs text-gray-200 cursor-pointer">@ ${r.name}</label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // Add Dynamic Button Row to builder
+    function addBtnRow(btnObj = null) {
+      const container = document.getElementById("p-buttons-list");
+      const rowId = "btn-row-" + Math.floor(Math.random() * 100000);
+      
+      const valLabel = btnObj ? btnObj.label : "";
+      const valType = btnObj ? btnObj.type : "ticket_open";
+      const valColor = btnObj ? btnObj.color : "primary";
+
+      const row = document.createElement("div");
+      row.id = rowId;
+      row.className = "flex items-center gap-2 bg-black/20 p-2.5 rounded-lg border border-white/5";
+      row.innerHTML = `
+        <div class="grid grid-cols-3 gap-2 flex-grow">
+          <div>
+            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">اسم/عنوان الزر:</label>
+            <input type="text" value="${valLabel}" placeholder="مثال: فتح تذكرة" class="btn-label-input w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-gray-200">
+          </div>
+          <div>
+            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">نوع الفعل (Action Type):</label>
+            <select class="btn-type-select w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-gray-200 font-sans">
+              <option value="ticket_open" class="bg-slate-900" ${valType === 'ticket_open' ? 'selected' : ''}>فتح تذكرة عادية</option>
+              <option value="claim" class="bg-slate-900" ${valType === 'claim' ? 'selected' : ''}>استلام التذكرة</option>
+              <option value="close" class="bg-slate-900" ${valType === 'close' ? 'selected' : ''}>إغلاق التذكرة فورياً</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[9px] font-bold text-gray-500 mb-0.5">اللون والمظهر:</label>
+            <select class="btn-color-select w-full bg-black/40 border border-white/10 rounded px-2 py-1 text-xs text-gray-200 font-sans">
+              <option value="primary" class="bg-slate-900" ${valColor === 'primary' ? 'selected' : ''}>أزرق (Primary)</option>
+              <option value="secondary" class="bg-slate-900" ${valColor === 'secondary' ? 'selected' : ''}>رمادي (Secondary)</option>
+              <option value="success" class="bg-slate-900" ${valColor === 'success' ? 'selected' : ''}>أخضر (Success)</option>
+              <option value="danger" class="bg-slate-900" ${valColor === 'danger' ? 'selected' : ''}>أحمر (Danger)</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="document.getElementById('${rowId}').remove()" class="p-1.5 mt-3.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/10 text-red-400 transition cursor-pointer" title="حذف الزر">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      `;
+      container.appendChild(row);
+      lucide.createIcons();
+    }
+
+    // Save Panel to local state variables
+    function saveCurrentPanel() {
+      const panelId = document.getElementById("p-id").value.trim().toLowerCase();
+      const pName = document.getElementById("p-name").value.trim();
+      
+      if (!panelId) {
+        showToast("يرجى إدخال معرف فريد للوحة التذاكر بالإنجليزية.", "error");
+        return;
+      }
+      if (!pName) {
+        showToast("يرجى إدخال اسم تعريفي للوحة.", "error");
+        return;
+      }
+
+      // Gather support roles checked
+      const checkedRoles = [];
+      guildRoles.forEach(r => {
+        const checkbox = document.getElementById(`role-chk-${r.id}`);
+        if (checkbox && checkbox.checked) {
+          checkedRoles.push(r.id);
+        }
+      });
+
+      // Gather Buttons Rows
+      const buttonsList = [];
+      const labels = document.querySelectorAll(".btn-label-input");
+      const types = document.querySelectorAll(".btn-type-select");
+      const colors = document.querySelectorAll(".btn-color-select");
+
+      labels.forEach((el, index) => {
+        const lbl = el.value.trim();
+        if (lbl) {
+          buttonsList.push({
+            id: "btn_" + index,
+            label: lbl,
+            type: types[index] ? types[index].value : "ticket_open",
+            color: colors[index] ? colors[index].value : "primary"
+          });
+        }
+      });
+
+      // Assemble panel object
+      const panelObj = {
+        name: pName,
+        title: document.getElementById("p-title").value.trim() || "تواصل مع فريق الدعم",
+        desc: document.getElementById("p-desc").value.trim() || "",
+        welcome: document.getElementById("p-welcome").value.trim() || "مرحباً بك في تذكرة الدعم!",
+        displayType: document.getElementById("p-displayType").value,
+        supportRoles: checkedRoles,
+        buttons: buttonsList
+      };
+
+      // Put to local state
+      if (!currentGuildSettings.panels) currentGuildSettings.panels = {};
+      currentGuildSettings.panels[panelId] = panelObj;
+
+      renderPanels();
+      closePanelEditor();
+      showToast("تم تحديث لوحة التذاكر المحددة في المسودة بنجاح! تذكر الضغط على زر الحفظ النهائي بالأعلى لمزامنتها.", "success");
+    }
+
+    // Close Panel Editor layout
+    function closePanelEditor() {
+      document.getElementById("panel-editor-box").classList.add("hidden");
+      editingPanelId = null;
+    }
+
+    // Remove Panel from local list
+    function removePanel(panelId) {
+      if (confirm(`هل أنت متأكد من حذف لوحة التذاكر (${panelId}) بالكامل؟`)) {
+        if (currentGuildSettings.panels && currentGuildSettings.panels[panelId]) {
+          delete currentGuildSettings.panels[panelId];
+          renderPanels();
+          closePanelEditor();
+          showToast("تمت إزالة لوحة التذاكر من المسودة، يرجى حفظ التغييرات لحفظها نهائياً بالبوت.", "info");
+        }
+      }
+    }
+
+    // Save All Guild System Settings back to Express Server API
+    async function saveAllGuildSettings() {
+      if (!selectedGuild) return;
+
+      // Display saving visual spinner
+      showToast("جاري إرسال وحفظ الإعدادات بنجاح إلى البوت...", "info");
+
+      // 1. Gathers protection states
+      const protObj = {};
+      const protectKeys = ['permissions', 'roles', 'channels', 'bots', 'links', 'spam'];
+      protectKeys.forEach(key => {
+        const enabledBox = document.getElementById(`prot-enabled-${key}`);
+        const punishSelect = document.getElementById(`prot-punishment-${key}`);
+        const durationInput = document.getElementById(`prot-duration-${key}`);
+
+        protObj[key] = {
+          enabled: enabledBox ? enabledBox.checked : false,
+          punishment: punishSelect ? punishSelect.value : "kick",
+          punishmentDuration: durationInput ? durationInput.value.trim() : ""
+        };
+      });
+
+      // 2. Formulates whole config object
+      const fullPayload = {
+        panels: currentGuildSettings.panels || {},
+        suggestions: {
+          enabled: document.getElementById("sug-enabled").checked,
+          channelId: document.getElementById("sug-channelId").value,
+          title: document.getElementById("sug-title").value.trim(),
+          desc: document.getElementById("sug-desc").value.trim(),
+          image: document.getElementById("sug-image").value.trim(),
+          serverIcon: document.getElementById("sug-serverIcon").checked
+        },
+        azkar: {
+          enabled: document.getElementById("azk-enabled").checked,
+          channelId: document.getElementById("azk-channelId").value,
+          interval: document.getElementById("azk-interval").value,
+          roleId: document.getElementById("azk-roleId").value
+        },
+        protection: protObj,
+        musicEnabled: document.getElementById("mus-enabled").checked,
+        deltaKeys: {
+          enabled: document.getElementById("key-enabled").checked,
+          channelId: document.getElementById("key-channelId").value,
+          method: document.getElementById("key-method").value
+        }
+      };
+
+      try {
+        const res = await fetch(getApiUrl(`/api/save-guild-settings/${selectedGuild.id}`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(fullPayload)
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            showToast("تم حفظ جميع إعدادات أنظمة البوت بنجاح ومزامنتها فورياً!", "success");
+          } else {
+            showToast("حدث خطأ أثناء الاتصال بالخادم لحفظ الإعدادات.", "error");
+          }
+        } else {
+          showToast("فشل الاتصال بالخادم لحفظ الملفات.", "error");
+        }
+      } catch (err) {
+        console.error("Save failed:", err);
+        showToast("فشل الاتصال وحفظ الإعدادات. يرجى مراجعة الخادم.", "error");
+      }
+    }
+
+    // Elegant Toast Notification System
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      
+      // Determine colors and icons based on notification type
+      let bg = "bg-slate-900 border-slate-800";
+      let icon = "info";
+      let iconColor = "text-blue-400";
+      
+      if (type === "success") {
+        bg = "bg-slate-900 border-emerald-500/20";
+        icon = "check-circle";
+        iconColor = "text-emerald-400";
+      } else if (type === "error") {
+        bg = "bg-slate-900 border-red-500/20";
+        icon = "alert-circle";
+        iconColor = "text-red-400";
+      }
+      
+      toast.className = `glass ${bg} px-4 py-3.5 rounded-xl border flex items-center gap-3 shadow-2xl transition duration-300 transform translate-y-4 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `
+        <div class="${iconColor}">
+          <i data-lucide="${icon}" class="w-5 h-5"></i>
+        </div>
+        <div class="flex-grow">
+          <p class="text-sm font-semibold text-white">${message}</p>
+        </div>
+      `;
+      
+      container.appendChild(toast);
+      lucide.createIcons();
+      
+      // Animation in
+      setTimeout(() => {
+        toast.classList.remove("translate-y-4", "opacity-0");
+      }, 50);
+      
+      // Animation out
+      setTimeout(() => {
+        toast.classList.add("translate-y-4", "opacity-0");
+        setTimeout(() => {
+          toast.remove();
+        }, 300);
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
