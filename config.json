@@ -1,7 +1,8 @@
 {
   "CLIENT_ID": "1405179057628254259",
   "CLIENT_SECRET": "aje2bpXBO253BpkCkdoXV9MMMono0TkH",
-  "REDIRECT_URI": "",
+  "REDIRECT_URI": "http://de3.bot-hosting.net:8080
+  ",
   "BOT_TOKEN": "MTQwNTE3OTA1NzYyODI1NDI1OQ.GeksWJ.fUjpttCvfQzcpD7G5DawCO5Bl8usIEg0JrQOzc",
   "BOT_IP_PORT": "localhost:8080",
   "BOT_SECRET": "سيرفر_سري_مشترك",
