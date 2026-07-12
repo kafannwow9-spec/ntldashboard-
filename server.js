@@ -50,6 +50,8 @@ function getMergedConfig() {
   const CLIENT_ID = fileConfig.CLIENT_ID || process.env.CLIENT_ID || "";
   const CLIENT_SECRET = fileConfig.CLIENT_SECRET || process.env.CLIENT_SECRET || "";
   const BOT_TOKEN = fileConfig.BOT_TOKEN || process.env.BOT_TOKEN || "";
+  const BOT_IP_PORT = fileConfig.BOT_IP_PORT || process.env.BOT_IP_PORT || "";
+  const BOT_SECRET = fileConfig.BOT_SECRET || process.env.BOT_SECRET || "";
   
   // Resolve App URL for Redirect URI construction
   const rawAppUrl = process.env.APP_URL || "";
@@ -62,6 +64,8 @@ function getMergedConfig() {
     CLIENT_SECRET,
     REDIRECT_URI,
     BOT_TOKEN,
+    BOT_IP_PORT,
+    BOT_SECRET,
     guilds: fileConfig.guilds || {}
   };
 }
@@ -398,7 +402,7 @@ app.get('/api/guild-settings/:guildId', async (req, res) => {
 });
 
 // 7. API: Save all settings for a specific Guild
-app.post('/api/save-guild-settings/:guildId', (req, res) => {
+app.post('/api/save-guild-settings/:guildId', async (req, res) => {
   const { guildId } = req.params;
   const { panels, suggestions, azkar, protection, musicEnabled, deltaKeys } = req.body;
 
@@ -423,7 +427,58 @@ app.post('/api/save-guild-settings/:guildId', (req, res) => {
         console.error("Error reloading azkar scheduler:", err);
       }
     }
-    res.json({ success: true, message: "تم حفظ الإعدادات بنجاح ومزامنتها مع البوت!" });
+
+    // Forward settings to the bot API
+    const cfg = getMergedConfig();
+    let botUpdated = false;
+    let botErrorMsg = "";
+    if (cfg.BOT_IP_PORT && cfg.BOT_SECRET) {
+      try {
+        let botUrl = cfg.BOT_IP_PORT;
+        if (!botUrl.startsWith('http://') && !botUrl.startsWith('https://')) {
+          botUrl = `http://${botUrl}`;
+        }
+        botUrl = botUrl.replace(/\/$/, '') + '/update-settings';
+
+        console.log(`Sending settings update to Bot API: ${botUrl}`);
+        const botRes = await fetch(botUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Bot-Secret': cfg.BOT_SECRET
+          },
+          body: JSON.stringify({
+            guildId,
+            panels,
+            suggestions,
+            azkar,
+            protection,
+            musicEnabled,
+            deltaKeys
+          }),
+          signal: AbortSignal.timeout(5000) // Timeout after 5 seconds to avoid hanging
+        });
+
+        if (botRes.ok) {
+          botUpdated = true;
+          console.log(`Bot settings updated successfully via API for guild ${guildId}`);
+        } else {
+          const errMsg = await botRes.text();
+          botErrorMsg = `Bot responded with status: ${botRes.status} - ${errMsg}`;
+          console.error(`Failed to update bot settings: ${botErrorMsg}`);
+        }
+      } catch (err) {
+        botErrorMsg = err.message;
+        console.error("Error contacting Discord Bot API:", err);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      message: botUpdated 
+        ? "تم حفظ الإعدادات بنجاح ومزامنتها وتحديث البوت فورياً!" 
+        : (botErrorMsg ? `تم حفظ الإعدادات محلياً، ولكن فشل تحديث البوت تلقائياً: ${botErrorMsg}` : "تم حفظ الإعدادات بنجاح ومزامنتها مع البوت!")
+    });
   } else {
     res.status(500).json({ error: "فشل حفظ التعديلات في ملف قاعدة البيانات." });
   }

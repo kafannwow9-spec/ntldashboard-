@@ -1716,9 +1716,9 @@
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            showToast("تم حفظ جميع إعدادات أنظمة البوت بنجاح ومزامنتها فورياً!", "success");
+            showToast(data.message || "تم حفظ جميع إعدادات أنظمة البوت بنجاح ومزامنتها فورياً!", "success");
           } else {
-            showToast("حدث خطأ أثناء الاتصال بالخادم لحفظ الإعدادات.", "error");
+            showToast(data.error || "حدث خطأ أثناء الاتصال بالخادم لحفظ الإعدادات.", "error");
           }
         } else {
           showToast("فشل الاتصال بالخادم لحفظ الملفات.", "error");

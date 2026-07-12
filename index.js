@@ -22,6 +22,18 @@ if (!BOT_TOKEN) {
         console.error("Error reading BOT_TOKEN from config.json:", err);
     }
 }
+let BOT_SECRET = process.env.BOT_SECRET;
+if (!BOT_SECRET) {
+    try {
+        const configPath = path.join(process.cwd(), 'config.json');
+        if (fs.existsSync(configPath)) {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+            BOT_SECRET = config.BOT_SECRET;
+        }
+    } catch (err) {
+        console.error("Error reading BOT_SECRET from config.json:", err);
+    }
+}
 let GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 if (!GEMINI_API_KEY || GEMINI_API_KEY === "MY_GEMINI_API_KEY" || GEMINI_API_KEY === "ضع_مفتاح_جيميني_هنا") {
     GEMINI_API_KEY = "AQ.Ab8RN6KVozdbkJNadA1PQhJIQDw4RG2dtFbL0QJ_lE1B7T3uSQ";
@@ -58,15 +70,26 @@ function isGuildPremium(guildId) {
     return Date.now() < premium.expiresAt;
 }
 
-// HTTP server inside index.js to serve static avatar images independently without extra dependencies (no Express required)
+// HTTP server inside index.js to serve static avatar images and handle secure updates
 const http = require('http');
 const uploadsDir = path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const HTTP_PORT = process.env.BOT_PORT || 3001;
+const PORT = process.env.PORT || 8080;
 const server = http.createServer((req, res) => {
+    // Add CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Bot-Secret');
+
+    if (req.method === 'OPTIONS') {
+        res.statusCode = 200;
+        res.end();
+        return;
+    }
+
     if (req.url.startsWith('/uploads/')) {
         const decodedUrl = decodeURIComponent(req.url);
         const safePath = path.normalize(decodedUrl).replace(/^(\.\.[\/\\])+/, '');
@@ -91,6 +114,65 @@ const server = http.createServer((req, res) => {
                 res.end(data);
             }
         });
+    } else if (req.url === '/update-settings' && req.method === 'POST') {
+        const reqSecret = req.headers['x-bot-secret'] || req.headers['X-Bot-Secret'];
+        if (!BOT_SECRET || reqSecret !== BOT_SECRET) {
+            res.statusCode = 401;
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(JSON.stringify({ error: 'Unauthorized: Invalid X-Bot-Secret' }));
+            return;
+        }
+
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk;
+        });
+        req.on('end', () => {
+            try {
+                const payload = JSON.parse(body);
+                const { guildId, panels, suggestions, azkar, protection, musicEnabled, deltaKeys } = payload;
+                
+                if (!guildId) {
+                    res.statusCode = 400;
+                    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                    res.end(JSON.stringify({ error: 'Missing guildId' }));
+                    return;
+                }
+
+                // Update the db
+                const db = getDB();
+                if (!db[guildId]) {
+                    db[guildId] = { panels: {}, tickets: {}, counter: 0 };
+                }
+                
+                if (panels !== undefined) db[guildId].panels = panels;
+                if (suggestions !== undefined) db[guildId].suggestions = suggestions;
+                if (azkar !== undefined) db[guildId].azkar = azkar;
+                if (protection !== undefined) db[guildId].protection = protection;
+                if (musicEnabled !== undefined) db[guildId].musicEnabled = musicEnabled;
+                if (deltaKeys !== undefined) db[guildId].deltaKeys = deltaKeys;
+
+                saveDB(db);
+
+                // Update system memory instantly
+                if (global.reloadAzkar) {
+                    try {
+                        global.reloadAzkar(guildId);
+                    } catch (err) {
+                        console.error("Error reloading azkar scheduler inside bot:", err);
+                    }
+                }
+
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.end(JSON.stringify({ success: true, message: 'Settings updated and synchronized inside Bot successfully!' }));
+            } catch (err) {
+                console.error("Error parsing update-settings payload:", err);
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.end(JSON.stringify({ error: 'Internal Server Error', details: err.message }));
+            }
+        });
     } else {
         res.statusCode = 404;
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -98,10 +180,10 @@ const server = http.createServer((req, res) => {
     }
 });
 
-server.listen(HTTP_PORT, '0.0.0.0', () => {
-    console.log(`[BOT HTTP SERVER] Running on http://0.0.0.0:${HTTP_PORT} to host uploaded assets.`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`[BOT HTTP SERVER] Running on http://0.0.0.0:${PORT} to host assets and receive updates.`);
 }).on('error', (err) => {
-    console.log(`[BOT HTTP SERVER] Note: Port ${HTTP_PORT} is already in use or cannot be bound:`, err.message);
+    console.log(`[BOT HTTP SERVER] Note: Port ${PORT} is already in use or cannot be bound:`, err.message);
 });
 
 const activeStates = new Map();

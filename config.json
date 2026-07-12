@@ -3,5 +3,17 @@
   "CLIENT_SECRET": "aje2bpXBO253BpkCkdoXV9MMMono0TkH",
   "REDIRECT_URI": "",
   "BOT_TOKEN": "MTQwNTE3OTA1NzYyODI1NDI1OQ.GeksWJ.fUjpttCvfQzcpD7G5DawCO5Bl8usIEg0JrQOzc",
-  "guilds": {}
+  "BOT_IP_PORT": "localhost:8080",
+  "BOT_SECRET": "سيرفر_سري_مشترك",
+  "guilds": {
+    "1179136470750068766": {
+      "ticket": true,
+      "welcome": true,
+      "levels": true,
+      "music": true,
+      "moderation": false,
+      "economy": true,
+      "azkar": true
+    }
+  }
 }
