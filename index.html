@@ -865,6 +865,46 @@
       
       // Load configuration status from backend
       await checkConfigStatus();
+
+      // Check if there is an OAuth2 authorization code in the URL (Direct redirect flow)
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      if (code) {
+        showToast("جاري تسجيل الدخول والتحقق من حسابك في ديسكورد...", "success");
+        try {
+          const currentOrigin = window.location.origin + window.location.pathname;
+          const cleanOrigin = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
+          
+          const res = await fetch(getApiUrl(`/api/auth/callback-direct?code=${code}&redirect_uri=${encodeURIComponent(cleanOrigin)}`));
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+              currentUser = data.user;
+              userGuilds = data.guilds;
+              
+              localStorage.setItem("ntl_access_token", data.accessToken);
+              localStorage.setItem("ntl_user", JSON.stringify(data.user));
+              localStorage.setItem("ntl_guilds", JSON.stringify(data.guilds));
+              
+              // Clear URL search params without page reload
+              window.history.replaceState({}, document.title, window.location.pathname);
+              
+              showLoggedInState(currentUser);
+              showToast("مرحباً بك! تم تسجيل الدخول بنجاح.", "success");
+              return; // Avoid loading previous session as we just set the new one
+            } else {
+              showToast(data.error || "فشل التحقق من جلسة تسجيل الدخول.", "error");
+            }
+          } else {
+            const errText = await res.text();
+            showToast("حدث خطأ أثناء التواصل مع خادم البوت.", "error");
+            console.error("Direct callback error response:", errText);
+          }
+        } catch (err) {
+          console.error("Direct OAuth callback failed:", err);
+          showToast("فشل الاتصال بخادم البوت للتحقق من الكود.", "error");
+        }
+      }
       
       // Check if user is logged in
       const savedUser = localStorage.getItem("ntl_user");
@@ -896,10 +936,12 @@
         if (res.ok) {
           configStatus = await res.json();
           
-          // Setup Redirect URI input box
+          // Setup Redirect URI input box to the current frontend URL
           const redirectBox = document.getElementById("redirect-uri-box");
-          if (redirectBox && configStatus.redirectUri) {
-            redirectBox.value = configStatus.redirectUri;
+          if (redirectBox) {
+            const currentOrigin = window.location.origin + window.location.pathname;
+            const cleanOrigin = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
+            redirectBox.value = cleanOrigin;
           }
 
           // If config is missing elements, display alert
@@ -963,22 +1005,24 @@
       showSection("viewport-guest");
     }
 
-    // Handle Discord Login Window Popup
+    // Handle Discord Login via Direct Redirect
     function loginWithDiscord() {
-      const width = 500;
-      const height = 800;
-      const left = (screen.width - width) / 2;
-      const top = (screen.height - height) / 2;
-      
-      const authWindow = window.open(
-        getApiUrl('/api/auth/login'),
-        'Discord_Auth_Popup',
-        `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,resizable=yes`
-      );
-      
-      if (!authWindow) {
-        showToast("يرجى السماح بالروابط المنبثقة لتسجيل الدخول.", "error");
+      if (!configStatus || !configStatus.clientId) {
+        showToast("يرجى الانتظار حتى يتم تحميل إعدادات البوت من الخادم.", "error");
+        return;
       }
+      
+      const currentOrigin = window.location.origin + window.location.pathname;
+      const cleanOrigin = currentOrigin.endsWith('/') ? currentOrigin.slice(0, -1) : currentOrigin;
+      
+      // Construct the Discord Authorize URL directly
+      const discordUrl = `https://discord.com/api/oauth2/authorize?client_id=${configStatus.clientId}&redirect_uri=${encodeURIComponent(cleanOrigin)}&response_type=code&scope=identify%20guilds`;
+      
+      showToast("جاري توجيهك إلى صفحة تسجيل الدخول الرسمية لـ ديسكورد...", "info");
+      
+      setTimeout(() => {
+        window.location.href = discordUrl;
+      }, 500);
     }
 
     // Listen for OAuth complete postMessage from Popup

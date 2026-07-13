@@ -78,7 +78,7 @@ app.get('/api/config-status', (req, res) => {
     secretConfigured: !!cfg.CLIENT_SECRET,
     botConfigured: !!cfg.BOT_TOKEN,
     redirectUri: cfg.REDIRECT_URI,
-    clientId: cfg.CLIENT_ID ? `***...${cfg.CLIENT_ID.slice(-4)}` : null
+    clientId: cfg.CLIENT_ID || null
   });
 });
 
@@ -226,6 +226,100 @@ app.get(['/auth/callback', '/auth/callback/'], async (req, res) => {
         </body>
       </html>
     `);
+  }
+});
+
+// 3b. API: Direct OAuth2 Callback returning JSON data
+app.get('/api/auth/callback-direct', async (req, res) => {
+  const { code, redirect_uri } = req.query;
+  const cfg = getMergedConfig();
+
+  if (!code) {
+    return res.status(400).json({ error: "Missing authorization code" });
+  }
+
+  // Use the dynamic redirect_uri if provided, otherwise fallback to config REDIRECT_URI
+  const finalRedirectUri = redirect_uri || cfg.REDIRECT_URI;
+
+  try {
+    // Exchange Authorization Code for Token
+    const tokenResponse = await fetch('https://discord.com/api/v10/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        client_id: cfg.CLIENT_ID,
+        client_secret: cfg.CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: finalRedirectUri
+      }).toString()
+    });
+
+    if (!tokenResponse.ok) {
+      const errBody = await tokenResponse.text();
+      console.error("Token exchange failed for direct callback:", errBody);
+      return res.status(400).json({ error: `Failed to exchange code: ${tokenResponse.statusText}`, details: errBody });
+    }
+
+    const tokenData = await tokenResponse.json();
+    const accessToken = tokenData.access_token;
+
+    // Fetch User Profile
+    const userRes = await fetch('https://discord.com/api/v10/users/@me', {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    if (!userRes.ok) throw new Error("Failed to fetch user profile");
+    const user = await userRes.json();
+
+    // Fetch User Guilds
+    const guildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    if (!guildsRes.ok) throw new Error("Failed to fetch user guilds");
+    const guilds = await guildsRes.json();
+
+    // Filter Admin Guilds (ADMINISTRATOR permission is 0x8)
+    const adminGuilds = guilds.filter(g => {
+      const perms = BigInt(g.permissions);
+      return (perms & 8n) === 8n;
+    });
+
+    // Fetch Bot Guilds if BOT_TOKEN is present
+    let botGuilds = [];
+    if (cfg.BOT_TOKEN) {
+      try {
+        const botGuildsRes = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+          headers: { 'Authorization': `Bot ${cfg.BOT_TOKEN}` }
+        });
+        if (botGuildsRes.ok) {
+          botGuilds = await botGuildsRes.json();
+        }
+      } catch (err) {
+        console.error("⚠️ Error fetching bot guilds for direct callback:", err);
+      }
+    }
+
+    const botGuildIds = new Set(botGuilds.map(g => g.id));
+
+    // Map guilds to return hasBot flag
+    const mappedGuilds = adminGuilds.map(g => ({
+      id: g.id,
+      name: g.name,
+      icon: g.icon,
+      hasBot: botGuildIds.has(g.id)
+    }));
+
+    return res.json({
+      success: true,
+      accessToken,
+      user,
+      guilds: mappedGuilds
+    });
+  } catch (error) {
+    console.error("OAuth Direct Callback Error:", error);
+    return res.status(500).json({ error: error.message || "Internal server error during OAuth exchange." });
   }
 });
 
@@ -490,6 +584,9 @@ app.post('/api/save-guild-settings/:guildId', async (req, res) => {
     res.status(500).json({ error: "فشل حفظ التعديلات في ملف قاعدة البيانات." });
   }
 });
+
+// Serve uploads directory static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve frontend files
 // We first check if the 'dist' directory exists (production static build), otherwise serve from root (development)

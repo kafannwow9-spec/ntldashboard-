@@ -181,11 +181,8 @@ const server = http.createServer((req, res) => {
 });
 
 if (require.main === module) {
-    server.listen(PORT, '0.0.0.0', () => {
-        console.log(`[BOT HTTP SERVER] Running on http://0.0.0.0:${PORT} to host assets and receive updates.`);
-    }).on('error', (err) => {
-        console.log(`[BOT HTTP SERVER] Note: Port ${PORT} is already in use or cannot be bound:`, err.message);
-    });
+    console.log(`[BOT] Started directly via index.js. Redirecting to server.js to run both Express and Discord Bot in parallel.`);
+    require('./server.js');
 } else {
     console.log(`[BOT] Loaded inside Express process. Skipping independent HTTP server to avoid port collision.`);
 }
