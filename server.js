@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
@@ -432,7 +432,14 @@ app.post('/api/save-guild-settings/:guildId', async (req, res) => {
     const cfg = getMergedConfig();
     let botUpdated = false;
     let botErrorMsg = "";
-    if (cfg.BOT_IP_PORT && cfg.BOT_SECRET) {
+    
+    const isSameProcess = !!global.reloadAzkar;
+    const isLocalHost = cfg.BOT_IP_PORT && (cfg.BOT_IP_PORT.includes('localhost') || cfg.BOT_IP_PORT.includes('127.0.0.1'));
+
+    if (isSameProcess && (!cfg.BOT_IP_PORT || isLocalHost)) {
+      botUpdated = true;
+      console.log(`Bot settings updated instantly in-memory for guild ${guildId} (Same Process)`);
+    } else if (cfg.BOT_IP_PORT && cfg.BOT_SECRET) {
       try {
         let botUrl = cfg.BOT_IP_PORT;
         if (!botUrl.startsWith('http://') && !botUrl.startsWith('https://')) {

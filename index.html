@@ -803,7 +803,13 @@
 
     // Dynamic API URL Helper (useful for Cloudflare Pages targeting independent Bot-Hosting)
     function getApiUrl(path) {
-      const baseUrl = localStorage.getItem("ntl_api_base_url") || "";
+      let baseUrl = localStorage.getItem("ntl_api_base_url") || "";
+      if (!baseUrl) {
+        // If we are not on localhost, automatically target the bot-hosting backend as default
+        if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+          baseUrl = "http://de3.bot-hosting.net:20163";
+        }
+      }
       const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
       const cleanPath = path.startsWith('/') ? path : '/' + path;
       return cleanBase ? `${cleanBase}${cleanPath}` : cleanPath;

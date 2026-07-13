@@ -180,11 +180,15 @@ const server = http.createServer((req, res) => {
     }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`[BOT HTTP SERVER] Running on http://0.0.0.0:${PORT} to host assets and receive updates.`);
-}).on('error', (err) => {
-    console.log(`[BOT HTTP SERVER] Note: Port ${PORT} is already in use or cannot be bound:`, err.message);
-});
+if (require.main === module) {
+    server.listen(PORT, '0.0.0.0', () => {
+        console.log(`[BOT HTTP SERVER] Running on http://0.0.0.0:${PORT} to host assets and receive updates.`);
+    }).on('error', (err) => {
+        console.log(`[BOT HTTP SERVER] Note: Port ${PORT} is already in use or cannot be bound:`, err.message);
+    });
+} else {
+    console.log(`[BOT] Loaded inside Express process. Skipping independent HTTP server to avoid port collision.`);
+}
 
 const activeStates = new Map();
 const activeClaims = new Set();
